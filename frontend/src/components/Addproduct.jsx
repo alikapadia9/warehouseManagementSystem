@@ -11,27 +11,32 @@ function Addproduct() {
   const [location1, setlocation1] = useState('');
   const [formdata, setformdata] = useState([]);
   const [edit, setedit] = useState('');
-  
+  const [search, setsearch] = useState('');
+
   const addProduct = async (formData) => {
     try {
       const response = await axiosInstance.post('/api/tasks/add', formData);
-      console.log('response----->', response)
-      alert('product item add successfully');
+      console.log('response----->', response);
+      alert('Product item added successfully');
     } catch (error) {
-      alert('product add failed. Please try again.');
+      alert('Product add failed. Please try again.');
     }
-  }
+  };
+  
 
-  // model(backend/models/ProductItem.js) -> controllers(backend\controllers\productItemController.js) -> router(backend\routes\taskRoutes.js)
-
-  function handlesubmit(a) {
+  const handlesubmit = async (a) => {
     a.preventDefault();
-    setformdata([...formdata, { productname: product, productq: quantity, prodlocation: location }]);
-    addProduct({ productname: product, productq: quantity, prodlocation: location })
-    setproduct('');
-    setquantity('');
-    setlocation('');
-  }
+    const newProduct = { productname: product, productq: quantity, prodlocation: location };
+    try {
+      await addProduct(newProduct);
+      setformdata([...formdata, newProduct]);
+      setproduct('');
+      setquantity('');
+      setlocation('');
+    } catch (error) {
+      console.error('Error submitting product:', error);
+    }
+  };
 
   function del(i) {
     const newlist = [...formdata];
@@ -41,7 +46,7 @@ function Addproduct() {
 
   function ed(i) {
     setedit(i);
-    setproduct1(formdata[i].productname); // Set the values for editing
+    setproduct1(formdata[i].productname);
     setquantity1(formdata[i].productq);
     setlocation1(formdata[i].prodlocation);
   }
@@ -56,78 +61,87 @@ function Addproduct() {
     setlocation1('');
   }
 
+  const filteredData = formdata.filter((data) =>
+    data.productname.toLowerCase().includes(search.toLowerCase())
+  );
+
   return (
     <div>
+      <input
+        type='text'
+        onChange={(e) => setsearch(e.target.value)}
+        placeholder='Search products...'
+        value={search}
+      />
+
       <form onSubmit={handlesubmit}>
         <input
           type='text'
           value={product}
-          placeholder='productname'
-          onChange={(e) => { setproduct(e.target.value); }}
+          placeholder='Product Name'
+          onChange={(e) => setproduct(e.target.value)}
           required
         />
         <input
           type='text'
           value={quantity}
-          placeholder='quantity'
-          onChange={(e) => { setquantity(e.target.value); }}
+          placeholder='Quantity'
+          onChange={(e) => setquantity(e.target.value)}
           required
         />
         <input
           type='text'
           value={location}
-          placeholder='ship to'
-          onChange={(e) => { setlocation(e.target.value); }}
+          placeholder='Ship To'
+          onChange={(e) => setlocation(e.target.value)}
           required
         />
         <input type='submit' value='Add' />
       </form>
-      <div className='m-container'>
-        {
-          formdata.map((data, i) => {
-            if (edit === i) {
-              return (
-                <div key={i} className='edit-form-container'>
-  <input
-    type='text'
-    className='edit-input'
-    value={product1}
-    placeholder='Product Name'
-    onChange={(e) => { setproduct1(e.target.value); }}
-  />
-  <input
-    type='text'
-    className='edit-input'
-    value={quantity1}
-    placeholder='Quantity'
-    onChange={(e) => { setquantity1(e.target.value); }}
-  />
-  <input
-    type='text'
-    className='edit-input'
-    value={location1}
-    placeholder='Ship To'
-    onChange={(e) => { setlocation1(e.target.value); }}
-  />
-  <div className='edit-buttons'>
-    <button className='save-button' onClick={() => savedata(i)}>Save</button>
-    <button className='cancel-button' onClick={() => setedit('')}>Cancel</button>
-  </div>
-</div>
 
-              );
-            }
+      <div className='m-container'>
+        {filteredData.map((data, i) => {
+          if (edit === i) {
             return (
-              <div key={i} className='prod'>
-                <h1>Product: {data.productname}</h1>
-                <h1>Quantity: {data.productq}</h1>
-                <h1>Ship To: {data.prodlocation}</h1>
-                <button onClick={() => del(i)}>Delete</button>
-                <button onClick={() => ed(i)}>Edit</button>
+              <div key={i} className='edit-form-container'>
+                <input
+                  type='text'
+                  className='edit-input'
+                  value={product1}
+                  placeholder='Product Name'
+                  onChange={(e) => setproduct1(e.target.value)}
+                />
+                <input
+                  type='text'
+                  className='edit-input'
+                  value={quantity1}
+                  placeholder='Quantity'
+                  onChange={(e) => setquantity1(e.target.value)}
+                />
+                <input
+                  type='text'
+                  className='edit-input'
+                  value={location1}
+                  placeholder='Ship To'
+                  onChange={(e) => setlocation1(e.target.value)}
+                />
+                <div className='edit-buttons'>
+                  <button className='save-button' onClick={() => savedata(i)}>Save</button>
+                  <button className='cancel-button' onClick={() => setedit('')}>Cancel</button>
+                </div>
               </div>
             );
-          })
-        }
+          }
+          return (
+            <div key={i} className='prod'>
+              <h1>Product: {data.productname}</h1>
+              <h1>Quantity: {data.productq}</h1>
+              <h1>Ship To: {data.prodlocation}</h1>
+              <button onClick={() => del(i)}>Delete</button>
+              <button onClick={() => ed(i)}>Edit</button>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
